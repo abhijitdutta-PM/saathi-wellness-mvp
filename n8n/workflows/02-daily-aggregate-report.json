@@ -1,0 +1,103 @@
+{
+  "name": "Saathi Cloud - Daily Aggregate Report",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "wellness-daily-report",
+        "authentication": "headerAuth",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "id": "f28e9f16-d592-4646-873a-bb1e8d632c3f",
+      "name": "Authenticated Daily Report",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        240,
+        300
+      ],
+      "webhookId": "1f92785a-ab19-4232-868f-18a0a77b5d86",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REPLACE_IN_N8N_UI",
+          "name": "Saathi Wellness Cloud Webhook Key"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const root = $input.first().json;\nconst event = root.body ?? root;\nconst p = event.payload ?? {};\nif (event.event_type !== 'report.daily') throw new Error('Unsupported report event');\nif (!event.event_id || !event.tenant_id) throw new Error('Missing event references');\nif (p.contains_student_content !== false) throw new Error('Refusing to email a report containing student content');\nif (!p.recipient_email || !/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(p.recipient_email)) throw new Error('No authorized report recipient');\nfor (const k of ['active_students','open_cases','immediate_cases','overdue_followups']) {\n  if (!Number.isInteger(p[k]) || p[k] < 0) throw new Error('Invalid aggregate field: ' + k);\n}\nconst school = String(p.tenant_slug || 'school').slice(0, 80);\nconst report = `School: ${school}\\nActive student accounts: ${p.active_students}\\nOpen support cases: ${p.open_cases}\\nUrgent open cases: ${p.immediate_cases}\\nOverdue follow-ups: ${p.overdue_followups}\\nGenerated: ${p.generated_at || 'unknown'}\\n\\nThese are operational counts, not diagnoses or student rankings. Review cases only in the restricted school dashboard.`;\nreturn [{json:{recipient_email:p.recipient_email, subject:'Saathi daily support operations \u2014 '+school, report}}];"
+      },
+      "id": "59a2d6ea-782f-470e-8158-0f5f59a46e8c",
+      "name": "Validate Aggregate-Only Report",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        500,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "fromEmail": "saathi-notifications@school.example",
+        "toEmail": "={{ $json.recipient_email }}",
+        "subject": "={{ $json.subject }}",
+        "emailFormat": "text",
+        "text": "={{ $json.report }}",
+        "options": {}
+      },
+      "id": "11339829-7ae4-4637-b8ac-df118f7fe817",
+      "name": "Send Aggregate Report",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        790,
+        300
+      ],
+      "credentials": {
+        "smtp": {
+          "id": "REPLACE_IN_N8N_UI",
+          "name": "Configure approved school SMTP credential"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Authenticated Daily Report": {
+      "main": [
+        [
+          {
+            "node": "Validate Aggregate-Only Report",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Aggregate-Only Report": {
+      "main": [
+        [
+          {
+            "node": "Send Aggregate Report",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": false,
+    "saveExecutionProgress": false,
+    "saveDataErrorExecution": "none",
+    "saveDataSuccessExecution": "none"
+  },
+  "versionId": "saathi-cloud-daily-report-v1",
+  "meta": {
+    "templateCredsSetupCompleted": false
+  },
+  "tags": []
+}

@@ -1,0 +1,68 @@
+{
+  "name": "Saathi Cloud - Backend Heartbeat",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "wellness-health-check",
+        "authentication": "headerAuth",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "id": "deb5df09-743f-408d-90eb-b9d87e1a489e",
+      "name": "Receive Backend Health Ping",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        240,
+        300
+      ],
+      "webhookId": "090ca60f-5320-4ed5-a49d-55d7b3423a0b",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REPLACE_IN_N8N_UI",
+          "name": "Saathi Wellness Cloud Webhook Key"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const root = $input.first().json;\nconst p = root.body ?? root;\nif (p.event_type !== 'backend.health_ping' || p.status !== 'ok') throw new Error('Invalid backend heartbeat');\nif (!p.sent_at) throw new Error('Heartbeat timestamp missing');\nreturn [{json:{status:'received', backend_environment:String(p.environment || 'unknown'), backend_sent_at:p.sent_at, n8n_received_at:new Date().toISOString(), note:'Confirms outbound reachability and this workflow execution only; it does not verify email delivery or human availability.'}}];"
+      },
+      "id": "d7132b9a-0a9c-4dc6-b94e-ad2b59711b9d",
+      "name": "Validate Heartbeat",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        500,
+        300
+      ]
+    }
+  ],
+  "connections": {
+    "Receive Backend Health Ping": {
+      "main": [
+        [
+          {
+            "node": "Validate Heartbeat",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": false,
+    "saveExecutionProgress": false,
+    "saveDataErrorExecution": "none",
+    "saveDataSuccessExecution": "none"
+  },
+  "versionId": "saathi-cloud-health-v1",
+  "meta": {
+    "templateCredsSetupCompleted": false
+  },
+  "tags": []
+}

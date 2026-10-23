@@ -1,0 +1,42 @@
+# Optional Docker-based development. n8n is intentionally NOT run here;
+# configure the separately hosted n8n Cloud instance instead.
+services:
+  db:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_ADMIN_PASSWORD:-local-admin-change-me}
+      POSTGRES_DB: wellness
+      WELLNESS_DB_PASSWORD: ${WELLNESS_DB_PASSWORD:-local-app-change-me}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./db/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d wellness"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    networks: [private]
+
+  app:
+    build: .
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql+psycopg://wellness_app:${WELLNESS_DB_PASSWORD:-local-app-change-me}@db:5432/wellness
+      APP_BASE_URL: ${APP_BASE_URL:-http://localhost:8000}
+      APP_ENV: ${APP_ENV:-development}
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:8000:8000"
+    networks: [private]
+
+networks:
+  private:
+    driver: bridge
+
+volumes:
+  postgres_data:

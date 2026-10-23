@@ -1,0 +1,103 @@
+{
+  "name": "Saathi Cloud - Case Notifications and Follow-ups",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "wellness-events",
+        "authentication": "headerAuth",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "id": "9dcb732f-bc07-4bee-b1d8-e31c65f5cf11",
+      "name": "Authenticated Saathi Event",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        240,
+        300
+      ],
+      "webhookId": "bd2ebad3-db19-48f3-958b-ff0170e57151",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REPLACE_IN_N8N_UI",
+          "name": "Saathi Wellness Cloud Webhook Key"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const root = $input.first().json;\nconst event = root.body ?? root;\nconst p = event.payload ?? {};\nconst allowed = new Set(['case.created', 'case.updated', 'followup.due', 'followup.assigned']);\nif (!allowed.has(event.event_type)) throw new Error('Unsupported event type');\nif (!event.event_id || !event.tenant_id || !event.resource_id) throw new Error('Missing event references');\nif (p.contains_student_content !== false) throw new Error('Refusing to send a payload that may contain student content');\nif (!p.recipient_email || !/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(p.recipient_email)) {\n  throw new Error('No authorized recipient was resolved by the backend; no email sent');\n}\nif (typeof p.subject !== 'string' || typeof p.message !== 'string') throw new Error('Missing approved notification copy');\nif (p.subject.length > 160 || p.message.length > 800) throw new Error('Notification exceeds allowed length');\n// Deliberately omit excerpts, student IDs, names, assessment evidence, and message content.\nreturn [{ json: {\n  event_id: event.event_id,\n  tenant_id: event.tenant_id,\n  tenant_slug: String(p.tenant_slug || 'school').slice(0, 80),\n  resource_id: String(event.resource_id).slice(0, 64),\n  recipient_email: p.recipient_email,\n  subject: p.subject,\n  message: p.message,\n  event_type: event.event_type\n} }];"
+      },
+      "id": "141bf8c9-5e55-4357-a2a6-feebb49435ac",
+      "name": "Validate Minimal Tenant Event",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        500,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "fromEmail": "saathi-notifications@school.example",
+        "toEmail": "={{ $json.recipient_email }}",
+        "subject": "={{ $json.subject }}",
+        "emailFormat": "text",
+        "text": "={{ $json.message }}",
+        "options": {}
+      },
+      "id": "f532f016-40e9-45c2-bb87-4e50a9580ca9",
+      "name": "Send Minimal Support Notification",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        790,
+        300
+      ],
+      "credentials": {
+        "smtp": {
+          "id": "REPLACE_IN_N8N_UI",
+          "name": "Configure approved school SMTP credential"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Authenticated Saathi Event": {
+      "main": [
+        [
+          {
+            "node": "Validate Minimal Tenant Event",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Minimal Tenant Event": {
+      "main": [
+        [
+          {
+            "node": "Send Minimal Support Notification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": false,
+    "saveExecutionProgress": false,
+    "saveDataErrorExecution": "none",
+    "saveDataSuccessExecution": "none"
+  },
+  "versionId": "saathi-cloud-events-v1",
+  "meta": {
+    "templateCredsSetupCompleted": false
+  },
+  "tags": []
+}

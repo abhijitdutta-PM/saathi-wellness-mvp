@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#182c4f">
+  <title>Saathi · Student Wellbeing</title>
+  <link rel="stylesheet" href="/static/styles.css">
+  <script defer src="/static/app.js?v=20261021-3"></script>
+</head>
+<body>
+  <main id="login-screen" class="login-shell">
+    <section class="login-brand">
+      <div class="brand-mark">s</div>
+      <div class="eyebrow light">A SCHOOL WELLBEING SPACE</div>
+      <h1>A little space<br>to feel heard.</h1>
+      <p>A calm place to reflect, talk things through, and find the next small step.</p>
+      <div class="brand-note"><span class="dot"></span><span>Thoughtful support. Human care. Student privacy.</span></div>
+    </section>
+    <section class="login-panel">
+      <div class="login-heading">
+        <div class="eyebrow">WELCOME TO SAATHI</div>
+        <h2>Sign in to your school</h2>
+        <p>Use the school code and account details provided by your school.</p>
+      </div>
+      <form id="login-form" class="form-stack">
+        <label>School code<input id="tenant-slug" name="tenant_slug" autocomplete="organization" value="demo-school" required></label>
+        <label>Email address<input id="email" name="email" type="email" autocomplete="username" placeholder="you@school.edu" required></label>
+        <label>Password<input id="password" name="password" type="password" autocomplete="current-password" required></label>
+        <button class="btn btn-primary btn-wide" type="submit">Sign in <span aria-hidden="true">→</span></button>
+        <div id="login-error" class="message error hidden" role="alert"></div>
+      </form>
+      <div id="login-success" class="message notice hidden" role="status"></div>
+      <div class="auth-switch" id="show-register-row"><span>New to Saathi?</span><button type="button" class="text-button" id="show-register">Create a student account</button></div>
+      <form id="registration-form" class="form-stack hidden" autocomplete="on">
+        <div class="message notice">Student self-registration only. You need a single-use invitation code supplied for your school. Creating an account does not create a wellbeing case.</div>
+        <label>School code<input id="register-tenant" name="tenant_slug" autocomplete="organization" required minlength="2" maxlength="80"></label>
+        <label>Single-use invitation code<input id="register-invite" name="invitation_code" autocomplete="off" required minlength="20" maxlength="120"><small class="field-hint">Enter only the invitation code. Do not include the invitation ID (the UUID) or any spaces before/after it.</small></label>
+        <label>Full name<input id="register-name" name="display_name" autocomplete="name" required minlength="2" maxlength="160"></label>
+        <label>School email address<input id="register-email" name="email" type="email" autocomplete="email" required maxlength="255"></label>
+        <label>Standard / grade (optional)<input id="register-class" name="school_class" maxlength="40" placeholder="e.g. 8B"></label>
+        <label>Age band<select id="register-age-band" name="age_band" required><option value="">Select age band</option><option value="6-10">6–10</option><option value="11-14">11–14</option><option value="15-17">15–17</option><option value="18+">18+</option></select></label>
+        <label>Create password<input id="register-password" name="password" type="password" autocomplete="new-password" required minlength="10" maxlength="200"></label>
+        <label>Confirm password<input id="register-password-confirm" name="password_confirm" type="password" autocomplete="new-password" required minlength="10" maxlength="200"></label>
+        <button class="btn btn-primary btn-wide" type="submit">Create student account <span aria-hidden="true">→</span></button>
+        <div id="registration-error" class="message error hidden" role="alert"></div>
+        <div class="auth-switch"><span>Already registered?</span><button type="button" class="text-button" id="show-login">Back to sign in</button></div>
+        <p class="tiny">Use only your own invitation. Keep your password private. Saathi registration does not replace any school or guardian consent requirements.</p>
+      </form>
+      <details id="demo-credentials" class="demo-credentials hidden">
+        <summary>Open demo accounts (synthetic data only)</summary>
+        <p>Use these only on your local development instance.</p>
+        <div id="demo-account-buttons" class="credential-grid"></div>
+        <p class="tiny">Development only. Do not use these credentials for live data.</p>
+      </details>
+      <div class="login-foot"><span class="lock-dot"></span> Access is scoped to your school and role.</div>
+    </section>
+  </main>
+
+  <div id="app-shell" class="app-shell hidden">
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-brand"><div class="brand-mark small">s</div><div><strong>saathi</strong><span>student wellbeing</span></div></div>
+      <div class="tenant-pill"><span class="tenant-dot"></span><span id="school-name">School</span></div>
+      <div class="nav-label">WORKSPACE</div>
+      <nav id="main-nav" class="main-nav" aria-label="Main navigation"></nav>
+      <div class="sidebar-bottom">
+        <div class="privacy-mini"><div class="privacy-icon">◇</div><div><strong>Care with boundaries</strong><p>Your school's support and privacy rules apply here.</p></div></div>
+        <button id="logout-button" class="nav-item logout-link"><span class="nav-icon">↪</span><span>Sign out</span></button>
+        <div class="version-label">MVP PREVIEW · BUILD 0.1</div>
+      </div>
+    </aside>
+
+    <section class="content-shell">
+      <header class="topbar">
+        <button id="mobile-menu" class="icon-button mobile-only" aria-label="Toggle navigation">☰</button>
+        <div class="breadcrumbs"><span>Saathi</span><span class="crumb-slash">/</span><strong id="current-page-title">Overview</strong></div>
+        <div class="topbar-right"><span id="environment-badge" class="status-pill">Preview</span><div class="profile-chip"><div id="user-avatar" class="avatar">S</div><div><strong id="user-name">User</strong><span id="user-role">Student</span><span id="user-email" class="profile-email"></span></div></div></div>
+      </header>
+      <div id="demo-notice" class="demo-banner hidden"><span class="banner-icon">!</span><div><strong>Development preview — not monitored</strong><span>This is synthetic demo data. No live school support team is monitoring messages. Do not enter real student information.</span></div></div>
+      <main id="view-container" class="view-container"><div class="loading-card">Loading your workspace…</div></main>
+      <footer class="app-footer"><span>Saathi wellbeing platform</span><span>Supportive guidance · Not a clinical service</span></footer>
+    </section>
+  </div>
+  <div id="toast-region" class="toast-region" aria-live="polite" aria-atomic="true"></div>
+  <dialog id="confirm-dialog" class="modal"><form method="dialog"><div class="modal-kicker">SAATHI</div><h3 id="confirm-title">Please confirm</h3><p id="confirm-copy"></p><div class="modal-actions"><button class="btn btn-quiet" value="cancel">Cancel</button><button class="btn btn-primary" id="confirm-continue" value="confirm">Continue</button></div></form></dialog>
+</body>
+</html>
